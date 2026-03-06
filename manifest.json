@@ -1,6 +1,6 @@
 {
   "name": "大工の計算機",
-  "short_name": "大工計算",
+  "short_name": "大工の計算機",
   "description": "現場で使える大工専用計算ツール",
   "start_url": "大工の計算機.html",
   "display": "standalone",
@@ -18,4 +18,5 @@
       "type": "image/png"
     }
   ]
+
 }
