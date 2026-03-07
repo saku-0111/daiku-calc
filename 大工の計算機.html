@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>大工の計算機</title>
-    <link rel="icon" href=""icon.png",">
-    <link rel="apple-touch-icon" href=""icon.png",">
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
         /* ================= ベース・共通スタイル ================= */
         /* アプリ全体の基本的なレイアウトと文字色・背景色の設定 */
@@ -154,6 +154,11 @@
                 <input type="number" id="kiku-kou" value="3.0" step="any" oninput="calcKiku()">
             </div>
             <p class="body-medium">条件: 殳 = 10.0</p>
+            
+            <div style="text-align: center; margin: 12px 0;">
+                <img src="koukogen.jpg" alt="勾殳玄の基本図" style="max-width: 100%; height: auto; border-radius: 4px;">
+            </div>
+
             <hr class="divider">
             <div id="kiku-results"></div>
             <p class="body-large" style="margin-top: 8px;">投げ墨: 勾と裏目0.5(0.7071)</p>
@@ -985,4 +990,3 @@
     </script>
 </body>
 </html>
-
