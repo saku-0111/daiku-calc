@@ -85,6 +85,11 @@
             padding: 10px 24px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 8px; text-align: center;
         }
         .m3-button:disabled { background-color: #E6E1E5; color: #938F99; cursor: not-allowed; }
+        
+        /* 過程表示用のサブボタン */
+        .process-button {
+            background-color: #E8DEF8; color: #1D192B; margin-top: 16px;
+        }
 
         .result-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
         .result-label { font-size: 14px; color: #1D1B20; }
@@ -113,7 +118,7 @@
         /* ================= 描画図形用スタイル ================= */
         .visual-container {
             width: 100%;
-            height: 160px; /* 10:4の比率に合わせて高さを調整 */
+            height: 160px;
             border: 1px solid #CAC4D0;
             border-radius: 4px;
             margin-top: 16px;
@@ -127,6 +132,62 @@
         .visual-container svg {
             max-width: 100%;
             max-height: 100%;
+        }
+
+        /* ================= モーダルウィンドウ用スタイル ================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #FEF7FF;
+            width: 90%;
+            max-height: 80%;
+            border-radius: 12px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #CAC4D0;
+            padding-bottom: 8px;
+        }
+        .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1D1B20;
+        }
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #49454F;
+            padding: 0;
+            line-height: 1;
+        }
+        .formula-box {
+            background-color: #F4EFF4;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 4px 0 12px 0;
+            word-break: break-all;
+            color: #49454F;
+            border-left: 4px solid #6750A4;
         }
     </style>
     
@@ -170,6 +231,7 @@
             <hr class="divider">
             <div id="kiku-results"></div>
             <p class="body-large" style="margin-top: 8px;">投げ墨: 勾と裏目0.5(0.7071)</p>
+            <button class="m3-button process-button" onclick="showProcessModal('page1')">計算過程を表示</button>
         </div>
 
         <div id="page2" class="page">
@@ -182,6 +244,7 @@
                 <input type="number" id="ita-haba" step="any" oninput="calcItawari()">
             </div>
             <div id="ita-results-area" style="display: flex; flex-direction: column; gap: 24px; margin-top: 8px;"></div>
+            <button class="m3-button process-button" onclick="showProcessModal('page2')">計算過程を表示</button>
         </div>
 
         <div id="page3" class="page">
@@ -206,6 +269,7 @@
             <div id="wari-err" class="error-text"></div>
             <p class="body-small">※本数は切り上げ計算のため内寸に誤差が出ます</p>
             <button id="wari-btn" class="m3-button" onclick="calcWaritsuke()">計算する</button>
+            <button id="wari-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('page3')">計算過程を表示</button>
         </div>
 
         <div id="page4" class="page" style="align-items: center; justify-content: center; height: 100%;">
@@ -230,6 +294,7 @@
                 <h3 class="title-medium">各段の高さ (累計):</h3>
                 <div id="tep-list" style="display: flex; flex-direction: column;"></div>
             </div>
+            <button id="tep-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('stairs_teppo')">計算過程を表示</button>
         </div>
 
         <div id="stairs_mawari" class="page">
@@ -265,6 +330,7 @@
                 <h3 class="title-medium">各段の高さ (累計):</h3>
                 <div id="maw-list" style="display: flex; flex-direction: column;"></div>
             </div>
+            <button id="maw-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('stairs_mawari')">計算過程を表示</button>
         </div>
 
         <div id="page5" class="page">
@@ -278,6 +344,7 @@
             <button class="m3-button" onclick="calcKoubai()">計算する</button>
 
             <div class="visual-container" id="kb-visual"></div>
+            <button id="kb-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('page5')">計算過程を表示</button>
         </div>
 
         <div id="page6" class="page">
@@ -318,6 +385,7 @@
                 <div class="result-row"><span class="result-label">垂木掛けの高さ(桁上端から)</span><span class="result-value text-primary" id="tar-res"></span></div>
                 <div id="tar-f-txt" class="body-small" style="display:none;"></div>
             </div>
+            <button id="tar-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('page6')">計算過程を表示</button>
         </div>
 
         <div id="page7" class="page">
@@ -341,6 +409,7 @@
             </div>
             <div class="spacer-16"></div>
             <button class="m3-button" onclick="goBack()">入力に戻る</button>
+            <button class="m3-button process-button" onclick="showProcessModal('page7')">計算過程を表示</button>
         </div>
 
         <div id="page8" class="page">
@@ -349,14 +418,27 @@
             <div class="input-group"><label>高さ</label><input type="number" id="sugi-t" step="any" oninput="calcSugikai()"></div>
             <hr class="divider" style="margin: 8px 0;">
             <div class="result-row"><span class="result-label">筋交の長さ</span><span class="result-value text-primary" id="sugi-res">0.0</span></div>
+            <button class="m3-button process-button" onclick="showProcessModal('page8')">計算過程を表示</button>
         </div>
 
         <div id="page9" class="page">
             <p class="body-medium">勾配（寸）または角度（度）を入力すると、もう一方の値を自動で計算します。</p>
             <div class="input-group"><label>屋根勾配 (寸)</label><input type="number" id="kak-k" step="any" placeholder="例: 3.5" oninput="updateAngleFromKoubai(this.value)"></div>
             <div class="input-group"><label>角度 (度°)</label><input type="number" id="kak-a" step="any" placeholder="例: 19.29" oninput="updateKoubaiFromAngle(this.value)"></div>
+            <button class="m3-button process-button" onclick="showProcessModal('page9')">計算過程を表示</button>
         </div>
 
+    </div>
+
+    <div id="process-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="title-medium" style="margin:0;">計算過程</h3>
+                <button class="close-button" onclick="closeProcessModal()">×</button>
+            </div>
+            <div id="modal-body" class="modal-body">
+                </div>
+        </div>
     </div>
 
     <script>
@@ -587,7 +669,7 @@
         
         function clearWariErr() {
             document.getElementById('wari-err').textContent = "";
-            document.getElementById('kb-visual').style.display = 'none';
+            document.getElementById('wari-process-btn').style.display = 'none';
         }
         
         function calcWaritsuke() {
@@ -623,6 +705,8 @@
                 else if (iS.value === "") { iS.value = ((l - (2 * ew + n * w)) / (n + 1)).toFixed(2); }
                 else if (iN.value === "") { if (w + s !== 0.0) iN.value = Math.ceil((l - (2.0 * ew + s)) / (w + s)).toString(); }
             }
+
+            document.getElementById('wari-process-btn').style.display = 'block';
         }
 
         function buildStepOpts(id) {
@@ -636,7 +720,10 @@
         }
         buildStepOpts('tep-n'); buildStepOpts('maw-n');
 
-        function clearTepErr() { document.getElementById('tep-err').textContent = ""; }
+        function clearTepErr() { 
+            document.getElementById('tep-err').textContent = ""; 
+            document.getElementById('tep-process-btn').style.display = 'none';
+        }
         
         function updateTepUI() {
             clearTepErr();
@@ -688,10 +775,14 @@
                     const t = parseFloat(iF.value) || 0.0;
                     iS.value = ((t - d) * (n - 1)).toFixed(2);
                 }
+                document.getElementById('tep-process-btn').style.display = 'block';
             }
         }
 
-        function clearMawErr() { document.getElementById('maw-err').textContent = ""; }
+        function clearMawErr() { 
+            document.getElementById('maw-err').textContent = ""; 
+            document.getElementById('maw-process-btn').style.display = 'none';
+        }
         
         function updateMawUI() {
             clearMawErr();
@@ -757,15 +848,17 @@
                     const t = parseFloat(iF.value) || 0.0;
                     iS.value = ((t - d) * (tDansu - 1)).toFixed(2);
                 }
+                document.getElementById('maw-process-btn').style.display = 'block';
             }
         }
 
         function clearKbErr() {
             document.getElementById('kb-err').textContent = "";
             document.getElementById('kb-visual').style.display = 'none';
+            document.getElementById('kb-process-btn').style.display = 'none';
         }
         
-        // ================= 勾配計算と図形描画ロジック (修正) =================
+        // ================= 勾配計算と図形描画ロジック =================
         function calcKoubai() {
             document.activeElement.blur();
             
@@ -781,16 +874,19 @@
             
             const err = document.getElementById('kb-err');
             const visualCont = document.getElementById('kb-visual');
+            const processBtn = document.getElementById('kb-process-btn');
 
             const filledCount = [kStr, lStr, tStr, sStr].filter(v => v !== "").length;
             if (filledCount < 2) {
                 err.textContent = "少なくとも2つの項目を入力してください";
                 visualCont.style.display = 'none';
+                processBtn.style.display = 'none';
                 return;
             }
             if (filledCount === 4) {
                 err.textContent = "求めたい寸法を空欄にしてください";
                 visualCont.style.display = 'none';
+                processBtn.style.display = 'none';
                 return;
             }
             err.textContent = "";
@@ -830,24 +926,21 @@
             }
 
             if (calculated) {
-                // 入力欄に結果を戻す
                 iK.value = k.toFixed(2);
                 iL.value = l.toFixed(2);
                 iT.value = t.toFixed(2);
                 iS.value = s.toFixed(2);
 
-                // --- SVG図形描画 ---
                 visualCont.innerHTML = ""; 
                 visualCont.style.display = 'flex';
+                processBtn.style.display = 'block';
 
-                // 固定の三角形を描画 (比率 10:4)
                 const svgW = 300; 
                 const pad = 25; 
-                const drawW = svgW - pad * 2; // 250
-                const drawH = drawW * (4 / 10); // 100
-                const svgH = drawH + pad * 2; // 150
+                const drawW = svgW - pad * 2; 
+                const drawH = drawW * (4 / 10); 
+                const svgH = drawH + pad * 2; 
 
-                // 座標計算 (右下基準の直角三角形)
                 const Ax = pad;
                 const Ay = pad;
                 const Bx = pad;
@@ -855,18 +948,13 @@
                 const Cx = pad + drawW;
                 const Cy = svgH - pad;
 
-                // 斜辺の角度 (描画テキストの回転用)
                 const drawDeg = Math.atan2(drawH, drawW) * 180 / Math.PI;
 
-                // SVGコード生成 (寸法数値のみ、小数点第2位まで)
                 const svgCode = `
                     <svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">
                         <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" fill="#E8DEF8" stroke="#6750A4" stroke-width="3"/>
-                        
                         <text x="${Bx + drawW/2}" y="${By + 18}" font-size="14" text-anchor="middle" fill="#1D1B20" font-weight="bold">${l.toFixed(2)}</text>
-                        
                         <text x="${Bx - 8}" y="${By - drawH/2}" font-size="14" text-anchor="middle" transform="rotate(-90 ${Bx - 8} ${By - drawH/2})" fill="#1D1B20" font-weight="bold">${t.toFixed(2)}</text>
-                        
                         <text x="${Ax + drawW/2}" y="${Ay + drawH/2 - 8}" font-size="14" text-anchor="middle" transform="rotate(${drawDeg} ${Ax + drawW/2} ${Ay + drawH/2 - 8})" fill="#6750A4" font-weight="bold">${s.toFixed(2)}</text>
                     </svg>
                 `;
@@ -874,6 +962,7 @@
             } else {
                 err.textContent = "計算できませんでした。入力を確認してください。";
                 visualCont.style.display = 'none';
+                processBtn.style.display = 'none';
             }
         }
 
@@ -886,7 +975,10 @@
             document.getElementById('tar-touge-grp').style.display = b === "峠" ? 'flex' : 'none';
             document.getElementById('tar-nari-grp').style.display = p === "垂木彫り有" ? 'flex' : 'none';
         }
-        function clearTarRes() { document.getElementById('tar-res-area').style.display = 'none'; }
+        function clearTarRes() { 
+            document.getElementById('tar-res-area').style.display = 'none'; 
+            document.getElementById('tar-process-btn').style.display = 'none';
+        }
         
         function calcTaruki() {
             document.activeElement.blur();
@@ -910,6 +1002,7 @@
 
             document.getElementById('tar-res-area').style.display = 'flex';
             document.getElementById('tar-res').textContent = h.toFixed(2);
+            document.getElementById('tar-process-btn').style.display = 'block';
 
             const fTxt = document.getElementById('tar-f-txt');
             if (b === "峠") {
@@ -983,6 +1076,286 @@
             const deg = parseFloat(input);
             if (!isNaN(deg)) document.getElementById('kak-k').value = (10.0 * Math.tan(deg * Math.PI / 180.0)).toFixed(2);
             else if (input === "") document.getElementById('kak-k').value = "";
+        }
+
+        // ================= モーダル＆計算過程生成ロジック =================
+        function showProcessModal(pageId) {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = generateProcessHTML(pageId);
+            document.getElementById('process-modal').style.display = 'flex';
+        }
+
+        function closeProcessModal() {
+            document.getElementById('process-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('process-modal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function generateProcessHTML(pageId) {
+            let p = "";
+            if (pageId === 'page1') {
+                const kou = parseFloat(document.getElementById('kiku-kou').value) || 0.0;
+                const ko = 10.0;
+                const hiraRad = Math.atan2(kou, ko);
+                const hiraDeg = hiraRad * 180.0 / Math.PI;
+                const gen = Math.sqrt(kou * kou + ko * ko);
+                const tyougen = ko * Math.cos(hiraRad);
+                const tangen = gen - tyougen;
+                const tyukou = Math.sqrt(ko * ko - tyougen * tyougen);
+                const sumiko = 10.0 * Math.sqrt(2.0);
+                const sumiRad = Math.atan2(kou, sumiko);
+                const sumigen = Math.sqrt(kou * kou + sumiko * sumiko);
+                const sumityukou = sumiko * Math.sin(sumiRad);
+
+                p = `<b>1. 平勾配の角度</b><br>
+                    <div class="formula-box">tanθ = 勾 / 殳 = ${kou} / 10<br>
+                    θ = arctan(${kou/10}) = ${hiraDeg.toFixed(2)}°</div>
+                    <b>2. 各寸法の計算 (ピタゴラスの定理等)</b><br>
+                    <div class="formula-box">・玄 (垂木斜辺)<br> = √(勾² + 殳²)<br> = √(${kou}² + 10²) = ${gen.toFixed(3)}</div>
+                    <div class="formula-box">・長玄<br> = 殳 × cos(θ)<br> = 10 × cos(${hiraDeg.toFixed(2)}°) = ${tyougen.toFixed(3)}</div>
+                    <div class="formula-box">・短玄<br> = 玄 - 長玄<br> = ${gen.toFixed(3)} - ${tyougen.toFixed(3)} = ${tangen.toFixed(3)}</div>
+                    <div class="formula-box">・中勾<br> = √(殳² - 長玄²)<br> = √(10² - ${tyougen.toFixed(3)}²) = ${tyukou.toFixed(3)}</div>
+                    <div class="formula-box">・隅殳 (隅木の底辺)<br> = 10 × √2 = ${sumiko.toFixed(3)}</div>
+                    <div class="formula-box">・隅玄 (隅木斜辺)<br> = √(勾² + 隅殳²)<br> = √(${kou}² + ${sumiko.toFixed(3)}²) = ${sumigen.toFixed(3)}</div>
+                    <div class="formula-box">・隅中勾<br> = 隅殳 × sin(隅勾配の角度) = ${sumityukou.toFixed(3)}</div>`;
+
+            } else if (pageId === 'page2') {
+                const z = parseFloat(document.getElementById('ita-zentyou').value) || 0;
+                const i = parseFloat(document.getElementById('ita-haba').value) || 0;
+                if(z === 0 || i === 0) return "値が入力されていないため、計算過程を表示できません。";
+                
+                const div = z / i;
+                let mH = Math.floor(div);
+                let tH = (z - (mH * i)) / 2.0;
+                let cM = Math.ceil(div);
+                let tS = i - (((cM * i) - z) / 2.0);
+                let mS = Math.max(0, cM - 2);
+
+                p = `<b>基本情報</b><br>
+                    <div class="formula-box">全長(Z) = ${z}, 板巾(I) = ${i}<br>Z ÷ I = ${div.toFixed(3)}</div>
+                    <b>パターン1 (板端割)</b><br>
+                    両端が同じ寸法の板になり、中心が板の継ぎ目になる割付です。<br>
+                    <div class="formula-box">真物枚数 = Z ÷ I の整数部分 = ${mH}枚<br>
+                    端部寸法 = (Z - (真物枚数 × I)) ÷ 2<br>
+                    = (${z} - (${mH} × ${i})) ÷ 2 = ${tH.toFixed(2)}</div>
+                    <b>パターン2 (板芯割)</b><br>
+                    中心に板の芯がくる割付です。<br>
+                    <div class="formula-box">仮枚数 = Z ÷ I の切り上げ = ${cM}枚<br>
+                    端部寸法 = I - (((仮枚数 × I) - Z) ÷ 2)<br>
+                    = ${i} - (((${cM} × ${i}) - ${z}) ÷ 2) = ${tS.toFixed(2)}<br>
+                    真物枚数 = 仮枚数 - 2 = ${mS}枚</div>`;
+
+            } else if (pageId === 'page3') {
+                const hasMat = document.querySelector('input[name="wari-opt"]:checked').value === "true";
+                const lStr = document.getElementById('wari-l').value;
+                const wStr = document.getElementById('wari-w').value;
+                const sStr = document.getElementById('wari-s').value;
+                const nStr = document.getElementById('wari-n').value;
+                const ewStr = document.getElementById('wari-ew').value;
+                
+                let emptyTarget = "";
+                let l = parseFloat(lStr)||0, w = parseFloat(wStr)||0, s = parseFloat(sStr)||0, n = parseFloat(nStr)||0, ew = parseFloat(ewStr)||0;
+
+                // 入力状態からどれを求めたか推測
+                if (hasMat) {
+                    if (lStr === ((w*(n-1)+s*(n-1)).toFixed(2))) emptyTarget = "全長(L)";
+                    else if (wStr === (((l - s*(n-1))/(n-1)).toFixed(2))) emptyTarget = "材巾(W)";
+                    else if (sStr === (((l - w*(n-1))/(n-1)).toFixed(2))) emptyTarget = "内寸(S)";
+                    else emptyTarget = "本数(N)";
+                } else {
+                    if (lStr === ((2*ew+w*n+s*(n+1)).toFixed(2))) emptyTarget = "全長(L)";
+                    else if (wStr === (((l-(2*ew+(n+1)*s))/n).toFixed(2))) emptyTarget = "材巾(W)";
+                    else if (sStr === (((l-(2*ew+n*w))/(n+1)).toFixed(2))) emptyTarget = "内寸(S)";
+                    else emptyTarget = "本数(N)";
+                }
+
+                p = `<b>基本情報</b><br>
+                    ・基準: ${hasMat ? "芯" : "外面"}<br>
+                    ・求めた項目: ${emptyTarget}<br><br>
+                    <b>計算式</b><br>`;
+
+                if (hasMat) {
+                    if (emptyTarget === "全長(L)") {
+                        p += `<div class="formula-box">全長 = 材巾×(N-1) + 内寸×(N-1)<br> = ${w}×(${n}-1) + ${s}×(${n}-1)<br> = ${(w*(n-1)+s*(n-1)).toFixed(2)}</div>`;
+                    } else if (emptyTarget === "材巾(W)") {
+                        p += `<div class="formula-box">材巾 = (全長 - 内寸×(N-1)) ÷ (N-1)<br> = (${l} - ${s}×(${n}-1)) ÷ (${n}-1)<br> = ${((l - s*(n-1))/(n-1)).toFixed(2)}</div>`;
+                    } else if (emptyTarget === "内寸(S)") {
+                        p += `<div class="formula-box">内寸 = (全長 - 材巾×(N-1)) ÷ (N-1)<br> = (${l} - ${w}×(${n}-1)) ÷ (${n}-1)<br> = ${((l - w*(n-1))/(n-1)).toFixed(2)}</div>`;
+                    } else {
+                        p += `<div class="formula-box">本数 = 切り上げ(全長 ÷ (材巾 + 内寸)) + 1<br> = 切り上げ(${l} ÷ (${w} + ${s})) + 1<br> = ${Math.ceil(l/(w+s)+1)}</div>`;
+                    }
+                } else {
+                    if (emptyTarget === "全長(L)") {
+                        p += `<div class="formula-box">全長 = 際材×2 + 材巾×N + 内寸×(N+1)<br> = ${ew}×2 + ${w}×${n} + ${s}×(${n}+1)<br> = ${(2*ew+w*n+s*(n+1)).toFixed(2)}</div>`;
+                    } else if (emptyTarget === "材巾(W)") {
+                        p += `<div class="formula-box">材巾 = (全長 - (際材×2 + 内寸×(N+1))) ÷ N<br> = (${l} - (${ew}×2 + ${s}×(${n}+1))) ÷ ${n}<br> = ${((l-(2*ew+(n+1)*s))/n).toFixed(2)}</div>`;
+                    } else if (emptyTarget === "内寸(S)") {
+                        p += `<div class="formula-box">内寸 = (全長 - (際材×2 + 材巾×N)) ÷ (N+1)<br> = (${l} - (${ew}×2 + ${w}×${n})) ÷ (${n}+1)<br> = ${((l-(2*ew+n*w))/(n+1)).toFixed(2)}</div>`;
+                    } else {
+                        p += `<div class="formula-box">本数 = 切り上げ((全長 - (際材×2 + 内寸)) ÷ (材巾 + 内寸))<br> = 切り上げ((${l} - (${ew}×2 + ${s})) ÷ (${w} + ${s}))<br> = ${Math.ceil((l-(2*ew+s))/(w+s))}</div>`;
+                    }
+                }
+
+            } else if (pageId === 'stairs_teppo') {
+                const h = parseFloat(document.getElementById('tep-h').value) || 0;
+                const n = parseFloat(document.getElementById('tep-n').value) || 0;
+                const d = parseFloat(document.getElementById('tep-d').value) || 0;
+                const iF = document.getElementById('tep-f').value;
+                const iS = document.getElementById('tep-s').value;
+
+                p = `<b>1. 蹴上寸法の計算</b><br>
+                    <div class="formula-box">蹴上 = 階高 ÷ 段数<br> = ${h} ÷ ${n} = ${(h/n).toFixed(2)} mm</div>
+                    <b>2. 水平方向の計算</b><br>`;
+                
+                // どちらを求めたか判定
+                if (parseFloat(iF).toFixed(2) === (((parseFloat(iS)/(n-1))+d).toFixed(2))) {
+                    p += `求めた項目: 踏面寸法<br>
+                        <div class="formula-box">踏面 = (水平長さ ÷ (段数 - 1)) + 段鼻寸法<br>
+                        = (${iS} ÷ (${n} - 1)) + ${d}<br> = ${((parseFloat(iS)/(n-1))+d).toFixed(2)} mm</div>`;
+                } else {
+                    p += `求めた項目: 水平長さ<br>
+                        <div class="formula-box">水平長さ = (踏面寸法 - 段鼻寸法) × (段数 - 1)<br>
+                        = (${iF} - ${d}) × (${n} - 1)<br> = ${((parseFloat(iF)-d)*(n-1)).toFixed(2)} mm</div>`;
+                }
+
+            } else if (pageId === 'stairs_mawari') {
+                const h = parseFloat(document.getElementById('maw-h').value) || 0;
+                const n = parseFloat(document.getElementById('maw-n').value) || 0;
+                const m = parseFloat(document.getElementById('maw-m').value) || 0;
+                const a = parseFloat(document.getElementById('maw-a').value) || 0;
+                const d = parseFloat(document.getElementById('maw-d').value) || 0;
+                const iF = document.getElementById('maw-f').value;
+                const iS = document.getElementById('maw-s').value;
+
+                p = `<b>1. 蹴上寸法の計算</b><br>
+                    <div class="formula-box">蹴上 = 階高 ÷ 全段数<br> = ${h} ÷ ${n} = ${(h/n).toFixed(2)} mm</div>
+                    <b>2. 回り段の角度</b><br>
+                    <div class="formula-box">1枚あたりの角度 = 全体角度 ÷ 回り段枚数<br> = ${a} ÷ ${m} = ${(a/m).toFixed(2)}°</div>
+                    <b>3. 鉄砲部の計算</b><br>
+                    <div class="formula-box">鉄砲部の段数 = 全段数 - 回り段枚数<br> = ${n} - ${m} = ${n-m} 段</div>`;
+                const tDansu = n - m;
+                if (tDansu > 0) {
+                    if (parseFloat(iF).toFixed(2) === (((parseFloat(iS)/(tDansu-1))+d).toFixed(2))) {
+                        p += `求めた項目: 鉄砲部の踏面寸法<br>
+                            <div class="formula-box">踏面 = (水平長さ ÷ (鉄砲部段数 - 1)) + 段鼻寸法<br>
+                            = (${iS} ÷ (${tDansu} - 1)) + ${d}<br> = ${((parseFloat(iS)/(tDansu-1))+d).toFixed(2)} mm</div>`;
+                    } else {
+                        p += `求めた項目: 鉄砲部の水平長さ<br>
+                            <div class="formula-box">水平長さ = (踏面寸法 - 段鼻寸法) × (鉄砲部段数 - 1)<br>
+                            = (${iF} - ${d}) × (${tDansu} - 1)<br> = ${((parseFloat(iF)-d)*(tDansu-1)).toFixed(2)} mm</div>`;
+                    }
+                } else {
+                    p += `鉄砲部が存在しません。`;
+                }
+
+            } else if (pageId === 'page5') {
+                const kStr = document.getElementById('kb-k').value;
+                const lStr = document.getElementById('kb-l').value;
+                const tStr = document.getElementById('kb-t').value;
+                const sStr = document.getElementById('kb-s').value;
+
+                let k = parseFloat(kStr) || 0;
+                let l = parseFloat(lStr) || 0;
+                let t = parseFloat(tStr) || 0;
+                let s = parseFloat(sStr) || 0;
+
+                p = `<b>ピタゴラスの定理を用いた計算</b><br>直角三角形の 底辺(L)、高さ(T)、斜辺(S)、勾配(K) の関係から算出します。<br><br>`;
+                
+                // 計算結果から逆算して表示
+                p += `<div class="formula-box">底辺 L = ${l.toFixed(2)}<br>高さ T = ${t.toFixed(2)}<br>斜辺 S = ${s.toFixed(2)}<br>勾配 K = ${k.toFixed(2)}</div>`;
+                p += `<div class="formula-box">斜辺 S = √(L² + T²)<br> = √(${l.toFixed(2)}² + ${t.toFixed(2)}²) = ${Math.sqrt(l*l+t*t).toFixed(2)}</div>`;
+                p += `<div class="formula-box">勾配 K = (T / L) × 10<br> = (${t.toFixed(2)} / ${l.toFixed(2)}) × 10 = ${((t/l)*10).toFixed(2)} 寸</div>`;
+
+            } else if (pageId === 'page6') {
+                const b = document.querySelector('input[name="tar-base"]:checked').value;
+                const pType = document.querySelector('input[name="tar-proc"]:checked').value;
+                const k = parseFloat(document.getElementById('tar-k').value) || 0;
+                const j = parseFloat(document.getElementById('tar-j').value) || 0;
+                const ta = parseFloat(document.getElementById('tar-ta').value) || 0;
+                const ma = parseFloat(document.getElementById('tar-ma').value) || 0;
+                const d = parseFloat(document.getElementById('tar-d').value) || 0;
+                const th = parseFloat(document.getElementById('tar-th').value) || 0;
+                const tn = parseFloat(document.getElementById('tar-tn').value) || 0;
+
+                let f = 0;
+                p = `<b>1. 口脇の深さ(F)の決定</b><br>`;
+                if (b === "口脇") {
+                    f = parseFloat(document.getElementById('tar-kf').value) || 0;
+                    p += `<div class="formula-box">基準が「口脇」なので入力値をそのまま使用<br>F = ${f} mm</div>`;
+                } else {
+                    f = (d / 2.0) * (k * 0.1) - th;
+                    p += `基準が「峠」なので逆算して算出します。<br>
+                        <div class="formula-box">F = (桁巾/2) × (勾配/10) - 峠の高さ<br>
+                        = (${d}/2) × (${k}/10) - ${th}<br> = ${f.toFixed(2)} mm</div>`;
+                }
+
+                p += `<b>2. 垂木掛けの高さ(H)の計算</b><br>
+                    <div class="formula-box">基本高さ(桁芯からの勾配高さ)<br> = 地の間 × (勾配/10)<br> = ${j} × ${k/10} = ${(j*k*0.1).toFixed(2)} mm</div>`;
+
+                if (pType === "加工なし(角)") {
+                    p += `加工: ${pType}<br>
+                        <div class="formula-box">H = 基本高さ - (F + 垂木掛けの勾配分 + 面材の勾配分)<br>
+                        = ${(j*k*0.1).toFixed(2)} - (${f.toFixed(2)} + ${ta}×${k/10} + ${ma}×${k/10})<br>
+                        = ${((k * j * 0.1) - (f + (k * ta * 0.1) + (k * ma * 0.1))).toFixed(2)} mm</div>`;
+                } else if (pType === "山勾配有") {
+                    p += `加工: ${pType}<br>
+                        <div class="formula-box">H = 基本高さ - (F + 面材の勾配分)<br>
+                        = ${(j*k*0.1).toFixed(2)} - (${f.toFixed(2)} + ${ma}×${k/10})<br>
+                        = ${((k * j * 0.1) - (f + (k * ma * 0.1))).toFixed(2)} mm</div>`;
+                } else if (pType === "垂木彫り有") {
+                    p += `加工: ${pType}<br>
+                        <div class="formula-box">H = 基本高さ - (F + 面材分) + 垂木の成の垂直高さ<br>
+                        = ${(j*k*0.1).toFixed(2)} - (${f.toFixed(2)} + ${ma}×${k/10}) + (${tn} × √(100+${k}²) / 10)<br>
+                        = ${((k * j * 0.1) - (f + (k * ma * 0.1)) + (tn * Math.sqrt(100.0 + k * k) * 0.1)).toFixed(2)} mm</div>`;
+                }
+
+            } else if (pageId === 'page7') {
+                const m = parseFloat(document.getElementById('uti-m').value) || 0;
+                const h = parseFloat(document.getElementById('uti-h').value) || 0;
+                const ma = parseFloat(document.getElementById('uti-ma').value) || 0;
+                const oma = parseFloat(document.getElementById('uti-oma').value) || 0;
+                const ir = parseFloat(document.getElementById('uti-ir').value) || 0;
+                const interval = m / 2.0;
+
+                p = `<b>1. 基準ピッチの計算</b><br>
+                    <div class="formula-box">ピッチ = モジュール ÷ 2<br> = ${m} ÷ 2 = ${interval} mm</div>
+                    <b>2. 各内寸の計算</b><br>芯々寸法から各部材の厚みの半分や全幅を引きます。<br>
+                    <div class="formula-box">・柱 〜 間柱<br>
+                    = ピッチ - (柱/2) - (間柱/2)<br> = ${interval} - (${h}/2) - (${ma}/2) = ${(interval - h/2 - ma/2).toFixed(1)} mm</div>
+                    <div class="formula-box">・柱(入隅) 〜 間柱<br>
+                    = ピッチ - (柱/2) - 入隅材 - (間柱/2)<br> = ${interval} - (${h}/2) - ${ir} - (${ma}/2) = ${(interval - h/2 - ir - ma/2).toFixed(1)} mm</div>
+                    <div class="formula-box">・間柱 〜 大間柱<br>
+                    = ピッチ - (間柱/2) - (大間柱/2)<br> = ${interval} - (${ma}/2) - (${oma}/2) = ${(interval - ma/2 - oma/2).toFixed(1)} mm</div>
+                    <div class="formula-box">・柱 〜 柱<br>
+                    = ピッチ - 柱<br> = ${interval} - ${h} = ${(interval - h).toFixed(1)} mm</div>`;
+
+            } else if (pageId === 'page8') {
+                const u = parseFloat(document.getElementById('sugi-u').value) || 0;
+                const t = parseFloat(document.getElementById('sugi-t').value) || 0;
+                if(u===0 || t===0) return "値が入力されていません。";
+                
+                p = `<b>ピタゴラスの定理を用いた計算</b><br>
+                    <div class="formula-box">筋交の長さ = √(内寸² + 高さ²)<br>
+                    = √(${u}² + ${t}²)<br>
+                    = ${Math.sqrt(u*u + t*t).toFixed(2)} mm</div>`;
+
+            } else if (pageId === 'page9') {
+                const kStr = document.getElementById('kak-k').value;
+                const aStr = document.getElementById('kak-a').value;
+                p = `<b>勾配 ⇔ 角度 の変換式</b><br>
+                    <div class="formula-box">・勾配から角度<br>角度 = arctan(勾配 / 10) × 180 / π</div>
+                    <div class="formula-box">・角度から勾配<br>勾配 = 10 × tan(角度 × π / 180)</div>
+                    現在の入力:<br>
+                    勾配 = ${kStr} 寸<br>
+                    角度 = ${aStr} °`;
+            }
+
+            return p;
         }
 
         window.onload = () => {
