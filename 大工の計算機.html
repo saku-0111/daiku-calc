@@ -8,7 +8,6 @@
     <link rel="apple-touch-icon" href="icon.png">
     <style>
         /* ================= ベース・共通スタイル ================= */
-        /* アプリ全体の基本的なレイアウトと文字色・背景色の設定 */
         body {
             margin: 0;
             font-family: 'Roboto', 'Noto Sans JP', sans-serif;
@@ -19,7 +18,6 @@
             height: 100vh;
         }
 
-        /* ヘッダーのスタイル（画面上部に固定） */
         header {
             background-color: #FEF7FF;
             padding: 16px;
@@ -33,7 +31,6 @@
             z-index: 100;
         }
 
-        /* 戻るボタンのスタイル（初期状態は非表示） */
         .back-button {
             background: none;
             border: none;
@@ -44,7 +41,6 @@
             display: none;
         }
 
-        /* コンテンツ領域のスタイル（スクロール可能にする） */
         .container {
             padding: 16px;
             display: flex;
@@ -54,14 +50,12 @@
             flex: 1;
         }
 
-        /* 画面表示切り替え用クラス（SPAのような画面遷移を実現） */
         .page {
             display: none;
             flex-direction: column;
             gap: 12px;
         }
 
-        /* activeクラスが付与されたページだけを表示する */
         .page.active {
             display: flex;
         }
@@ -78,7 +72,6 @@
         .divider { height: 1px; background-color: #CAC4D0; border: none; margin: 4px 0; }
         .spacer-16 { height: 16px; width: 16px; }
 
-        /* 入力フォームのスタイル群 */
         .input-group { display: flex; flex-direction: column; width: 100%; }
         .input-group label { font-size: 12px; color: #49454F; margin-bottom: 4px; margin-left: 4px; }
         .input-group input, .input-group select {
@@ -87,20 +80,17 @@
         }
         .input-group input:focus, .input-group select:focus { border-color: #6750A4; border-width: 2px; padding: 15px; }
 
-        /* Material Design 3風のボタンスタイル */
         .m3-button {
             background-color: #6750A4; color: #FFFFFF; border: none; border-radius: 20px;
             padding: 10px 24px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; margin-top: 8px; text-align: center;
         }
         .m3-button:disabled { background-color: #E6E1E5; color: #938F99; cursor: not-allowed; }
 
-        /* 計算結果表示行のスタイル */
         .result-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
         .result-label { font-size: 14px; color: #1D1B20; }
         .result-value { font-size: 16px; font-weight: 500; color: #1D1B20; white-space: pre-wrap; }
         .result-label2 { font-size: 11px; color: #6750A4; margin-top: -4px; margin-bottom: 4px; }
 
-        /* ラジオボタンなどの横並び配置用 */
         .radio-row { display: flex; align-items: center; gap: 8px; }
 
         /* ================= メニューリスト用 ================= */
@@ -120,39 +110,23 @@
         .col-label { flex: 1.2; }
         .col-value { flex: 0.8; }
 
-        /* ================= 板割図解用スタイル ================= */
-        .board-visual-container {
-            display: flex;
+        /* ================= 描画図形用スタイル ================= */
+        .visual-container {
             width: 100%;
-            height: 36px;
-            border: 1px solid #79747E;
+            height: 160px; /* 10:4の比率に合わせて高さを調整 */
+            border: 1px solid #CAC4D0;
             border-radius: 4px;
-            overflow: hidden;
-            margin: 12px 0 8px 0;
-            box-sizing: border-box;
-        }
-        .board-segment {
-            height: 100%;
-            border-right: 1px dashed #CAC4D0;
-            display: flex;
+            margin-top: 16px;
+            display: none;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-            color: #1D1B20;
+            background-color: white;
+            padding: 10px;
             box-sizing: border-box;
-            white-space: nowrap;
-            overflow: hidden;
         }
-        .board-segment:last-child {
-            border-right: none;
-        }
-        .board-edge {
-            background-color: #E8DEF8;
-            font-weight: bold;
-        }
-        .board-full {
-            background-color: #FDFBFF;
-            color: #49454F;
+        .visual-container svg {
+            max-width: 100%;
+            max-height: 100%;
         }
     </style>
     
@@ -162,7 +136,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <script>
-        // オフラインでも動作するようにサービスワーカーを登録
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js');
@@ -300,8 +273,11 @@
             <div class="input-group"><label>水平長さ (底辺)</label><input type="number" id="kb-l" step="any" oninput="clearKbErr()"></div>
             <div class="input-group"><label>高さ</label><input type="number" id="kb-t" step="any" oninput="clearKbErr()"></div>
             <div class="input-group"><label>斜辺の長さ</label><input type="number" id="kb-s" step="any" oninput="clearKbErr()" onkeypress="if(event.key==='Enter') calcKoubai()"></div>
+            
             <div id="kb-err" class="error-text"></div>
             <button class="m3-button" onclick="calcKoubai()">計算する</button>
+
+            <div class="visual-container" id="kb-visual"></div>
         </div>
 
         <div id="page6" class="page">
@@ -385,7 +361,6 @@
 
     <script>
         // ================= ナビゲーション =================
-        // アプリのメニュー一覧（IDとタイトル、説明文の定義）
         const menuItems = [
             { id: "page1", title: "規矩術", desc: "屋根勾配からいろいろ計算" },
             { id: "page2", title: "板割計算", desc: "床板や羽目板の計算" },
@@ -398,10 +373,8 @@
             { id: "page9", title: "角度・勾配の変換", desc: "角度から勾配、勾配から角度" }
         ];
 
-        // 画面遷移の履歴を保持する配列（初期値はトップ画面）
         let navStack = [{ id: 'main', title: '大工の計算機' }];
 
-        // メニュー画面のボタンを動的に生成する関数
         function initMenu() {
             const container = document.getElementById('menu-list-container');
             menuItems.forEach(item => {
@@ -411,7 +384,6 @@
                 const btn = document.createElement('button');
                 btn.className = 'menu-button-alt';
                 btn.textContent = item.title;
-                // ボタンクリックで指定のページIDへ遷移
                 btn.onclick = () => navigateTo(item.id, item.title);
                 
                 const desc = document.createElement('p');
@@ -429,62 +401,49 @@
             });
         }
 
-        // 指定したページに切り替える関数
         function navigateTo(pageId, title) {
-            // 現在のページを非表示
             document.getElementById(navStack[navStack.length - 1].id).classList.remove('active');
-            // 履歴に新しいページを追加
             navStack.push({ id: pageId, title: title });
-            // 新しいページを表示
             document.getElementById(pageId).classList.add('active');
-            // ヘッダーのタイトルと戻るボタンを更新
             updateHeader();
         }
 
-        // ひとつ前の画面に戻る関数
         function goBack() {
             if (navStack.length > 1) {
-                const current = navStack.pop(); // 現在のページを取り出して削除
+                const current = navStack.pop();
                 document.getElementById(current.id).classList.remove('active');
-                const prev = navStack[navStack.length - 1]; // 戻り先のページを取得
+                const prev = navStack[navStack.length - 1];
                 document.getElementById(prev.id).classList.add('active');
                 updateHeader();
             }
         }
 
-        // ヘッダー領域の表示内容を更新する関数
         function updateHeader() {
             const current = navStack[navStack.length - 1];
             document.getElementById('header-title').textContent = current.title;
-            // トップ画面以外のときだけ「←」ボタンを表示
             document.getElementById('back-btn').style.display = navStack.length > 1 ? 'block' : 'none';
         }
 
         // ================= 各機能の計算ロジック =================
         
-        // 規矩術（きくじゅつ）の各種計算
         function calcKiku() {
             const kouStr = document.getElementById('kiku-kou').value;
-            const kou = parseFloat(kouStr) || 0.0; // 勾（高さ）
-            const ko = 10.0; // 殳（底辺の基準、通常10寸）
-            const sumiko = 10.0 * Math.sqrt(2.0); // 隅殳（隅木の平勾配の底辺、10√2）
+            const kou = parseFloat(kouStr) || 0.0;
+            const ko = 10.0;
+            const sumiko = 10.0 * Math.sqrt(2.0);
 
-            // 平勾配の角度計算
             const hiraRad = Math.atan2(kou, ko);
             const hiraDeg = hiraRad * 180.0 / Math.PI;
             
-            // 隅勾配の角度計算
             const sumiRad = Math.atan2(kou, sumiko);
             
-            // 各種寸法の計算（ピタゴラスの定理や三角関数を利用）
-            const gen = Math.sqrt(kou * kou + ko * ko); // 玄（垂木の斜辺）
-            const tyougen = ko * Math.cos(hiraRad); // 長玄
-            const tangen = gen - tyougen; // 短玄
-            const tyukou = Math.sqrt(ko * ko - tyougen * tyougen); // 中勾
-            const sumigen = Math.sqrt(kou * kou + sumiko * sumiko); // 隅玄
-            const sumityukou = sumiko * Math.sin(sumiRad); // 隅中勾
+            const gen = Math.sqrt(kou * kou + ko * ko);
+            const tyougen = ko * Math.cos(hiraRad);
+            const tangen = gen - tyougen;
+            const tyukou = Math.sqrt(ko * ko - tyougen * tyougen);
+            const sumigen = Math.sqrt(kou * kou + sumiko * sumiko);
+            const sumityukou = sumiko * Math.sin(sumiRad);
 
-            // 画面表示用のデータ配列
             const results = [
                 { label: "角度 (度)", val: hiraDeg.toFixed(2) + "°", primary: true },
                 { label: "玄", val: gen.toFixed(3), label2: "垂木の長さの比" },
@@ -496,7 +455,6 @@
                 { label: "隅中勾", val: sumityukou.toFixed(3), label2: "隅木・谷木の山勾配" }
             ];
 
-            // 計算結果をHTMLに反映
             const container = document.getElementById('kiku-results');
             container.innerHTML = "";
             results.forEach(r => {
@@ -511,7 +469,6 @@
                 main.innerHTML = `<span class="result-label">${r.label}</span><span class="result-value ${r.primary ? 'text-primary' : ''}">${r.val}</span>`;
                 row.appendChild(main);
 
-                // サブタイトル（大工用語の解説）があれば追加
                 if (r.label2) {
                     const l2 = document.createElement('span');
                     l2.className = 'result-label2';
@@ -522,13 +479,12 @@
             });
         }
 
-        // 床板・羽目板などの板割計算
         function calcItawari() {
             const zStr = document.getElementById('ita-zentyou').value;
             const iStr = document.getElementById('ita-haba').value;
 
-            const zValue = parseFloat(zStr); // 全長
-            const iValue = parseFloat(iStr); // 板巾
+            const zValue = parseFloat(zStr);
+            const iValue = parseFloat(iStr);
             
             const resultsArea = document.getElementById('ita-results-area');
             resultsArea.innerHTML = "";
@@ -539,7 +495,6 @@
 
             const div = zValue / iValue;
 
-            // --- 板端割の計算 ---
             let maisuHashi = Math.floor(div);
             let tanbuHashi = (zValue - (maisuHashi * iValue)) / 2.0;
             let marksHashi = [];
@@ -549,7 +504,6 @@
                 }
             }
 
-            // --- 板芯割の計算 ---
             let ceilM = Math.ceil(div);
             let tanbuShin = iValue - (((ceilM * iValue) - zValue) / 2.0);
             let maisuShin = Math.max(0, ceilM - 2);
@@ -560,26 +514,21 @@
                 }
             }
 
-            // 結果を配列にまとめる
             let results = [
                 { maisu: maisuHashi, tanbu: tanbuHashi, marks: marksHashi },
                 { maisu: maisuShin, tanbu: tanbuShin, marks: marksShin }
             ];
 
-            // 張始め・終わりの板巾(tanbu)が大きい順にソート（大きい方を優先）
             results.sort((a, b) => b.tanbu - a.tanbu);
 
-            // DOM生成
             results.forEach((res, index) => {
                 const wrapper = document.createElement('div');
                 wrapper.style.display = 'flex';
                 wrapper.style.flexDirection = 'column';
 
-                // タイトル
                 const title = document.createElement('h3');
                 title.className = 'title-medium';
                 title.style.marginBottom = '4px';
-                // パターン1, 2として表示。大きい方を優先（おすすめ）として強調表示
                 title.innerHTML = `パターン${index + 1} <span style="font-size: 12px; color: #625B71; font-weight: normal;">${index === 0 ? '(推奨)' : ''}</span>`;
                 wrapper.appendChild(title);
 
@@ -588,53 +537,16 @@
                 hr1.style.margin = '4px 0 8px 0';
                 wrapper.appendChild(hr1);
 
-                // ================= ここから図解生成処理 =================
-                // 割合を計算して図の幅を決定する
-                const edgePercent = (res.tanbu / zValue) * 100;
-                const fullPercent = ((res.maisu * iValue) / zValue) * 100;
-
-                const visualBar = document.createElement('div');
-                visualBar.className = 'board-visual-container';
-
-                // 左端の板
-                const leftEdge = document.createElement('div');
-                leftEdge.className = 'board-segment board-edge';
-                leftEdge.style.width = `${edgePercent}%`;
-                leftEdge.textContent = res.tanbu.toFixed(1);
-                visualBar.appendChild(leftEdge);
-
-                // 真物（中央の板たち）
-                if (res.maisu > 0) {
-                    const middle = document.createElement('div');
-                    middle.className = 'board-segment board-full';
-                    middle.style.width = `${fullPercent}%`;
-                    middle.textContent = `真物 ${res.maisu}枚`;
-                    visualBar.appendChild(middle);
-                }
-
-                // 右端の板
-                const rightEdge = document.createElement('div');
-                rightEdge.className = 'board-segment board-edge';
-                rightEdge.style.width = `${edgePercent}%`;
-                rightEdge.textContent = res.tanbu.toFixed(1);
-                visualBar.appendChild(rightEdge);
-
-                wrapper.appendChild(visualBar);
-                // ================= 図解生成処理ここまで =================
-
-                // 枚数
                 const rowMaisu = document.createElement('div');
                 rowMaisu.className = 'result-row';
                 rowMaisu.innerHTML = `<span class="result-label">必要枚数(真物)</span><span class="result-value">${res.maisu}枚</span>`;
                 wrapper.appendChild(rowMaisu);
 
-                // 板巾
                 const rowTanbu = document.createElement('div');
                 rowTanbu.className = 'result-row';
                 rowTanbu.innerHTML = `<span class="result-label">張始め・終わりの板巾</span><span class="result-value ${index === 0 ? 'text-primary' : ''}">${res.tanbu.toFixed(2)}</span>`;
                 wrapper.appendChild(rowTanbu);
 
-                // 通り出し寸法
                 if (res.marks.length > 0) {
                     const marksArea = document.createElement('div');
                     marksArea.style.display = 'flex';
@@ -666,33 +578,28 @@
             });
         }
 
-        // 割付計算のラジオボタン切替時のUI更新
         function updateWariUI() {
-            const hasMat = document.querySelector('input[name="wari-opt"]:checked').value === "true"; // 芯基準か外面基準か
+            const hasMat = document.querySelector('input[name="wari-opt"]:checked').value === "true";
             document.getElementById('wari-edge-group').style.display = hasMat ? 'none' : 'flex';
             document.getElementById('wari-count-label').textContent = hasMat ? "本数" : "本数(際材の本数は除く)";
             clearWariErr();
         }
         
-        // エラーメッセージのクリアと計算ボタンの有効/無効化
         function clearWariErr() {
             document.getElementById('wari-err').textContent = "";
-            const hasMat = document.querySelector('input[name="wari-opt"]:checked').value === "true";
-            document.getElementById('wari-btn').disabled = hasMat ? false : document.getElementById('wari-ew').value === "";
+            document.getElementById('kb-visual').style.display = 'none';
         }
         
-        // 竿縁・格天井・ウッドデッキ等の割付計算
         function calcWaritsuke() {
-            document.activeElement.blur(); // スマホのキーボードを閉じる
+            document.activeElement.blur();
             const hasMat = document.querySelector('input[name="wari-opt"]:checked').value === "true";
-            const iL = document.getElementById('wari-l'); // 全長
-            const iW = document.getElementById('wari-w'); // 材巾
-            const iS = document.getElementById('wari-s'); // 内寸（隙間）
-            const iEW = document.getElementById('wari-ew'); // 際材（端材）の巾
-            const iN = document.getElementById('wari-n'); // 本数
+            const iL = document.getElementById('wari-l');
+            const iW = document.getElementById('wari-w');
+            const iS = document.getElementById('wari-s');
+            const iEW = document.getElementById('wari-ew');
+            const iN = document.getElementById('wari-n');
             const err = document.getElementById('wari-err');
 
-            // 4項目すべて入力されている場合はエラー（求めたい箇所を空欄にする仕様）
             if (iL.value !== "" && iW.value !== "" && iS.value !== "" && iN.value !== "") {
                 err.textContent = "求めたい寸法を空欄にしてください";
                 return;
@@ -706,13 +613,11 @@
             const n = parseFloat(iN.value) || 0.0;
 
             if (hasMat) {
-                // 「芯」基準の計算処理
                 if (iL.value === "" && iW.value !== "" && iS.value !== "" && iN.value !== "") iL.value = (w * (n - 1.0) + s * (n - 1.0)).toFixed(2);
                 else if (iW.value === "") { if (n > 1.0) iW.value = ((l - s * (n - 1.0)) / (n - 1.0)).toFixed(2); }
                 else if (iS.value === "") { if (n > 1.0) iS.value = ((l - w * (n - 1.0)) / (n - 1.0)).toFixed(2); }
                 else if (iN.value === "") { if (w + s !== 0.0) iN.value = Math.ceil(l / (w + s) + 1).toString(); }
             } else {
-                // 「外面」基準の計算処理
                 if (iL.value === "" && iEW.value !== "" && iW.value !== "" && iS.value !== "" && iN.value !== "") iL.value = (2 * ew + n * w + (n + 1) * s).toFixed(2);
                 else if (iW.value === "") { if (n !== 0.0) iW.value = ((l - (2 * ew + (n + 1) * s)) / n).toFixed(2); }
                 else if (iS.value === "") { iS.value = ((l - (2 * ew + n * w)) / (n + 1)).toFixed(2); }
@@ -720,7 +625,6 @@
             }
         }
 
-        // 階段の段数プルダウンを生成するユーティリティ
         function buildStepOpts(id) {
             const sel = document.getElementById(id);
             for (let i = 1; i <= 20; i++) {
@@ -732,27 +636,22 @@
         }
         buildStepOpts('tep-n'); buildStepOpts('maw-n');
 
-        // 鉄砲階段のエラー消去
         function clearTepErr() { document.getElementById('tep-err').textContent = ""; }
         
-        // 鉄砲階段のUI更新（蹴上や累計高さのリアルタイム計算）
         function updateTepUI() {
             clearTepErr();
-            const hRaw = document.getElementById('tep-h').value; // 階高
-            const dRaw = document.getElementById('tep-d').value; // 段鼻
-            // 必須項目が埋まっていなければ計算ボタンを無効化
+            const hRaw = document.getElementById('tep-h').value;
+            const dRaw = document.getElementById('tep-d').value;
             document.getElementById('tep-btn').disabled = !(hRaw !== "" && dRaw !== "");
 
             const h = parseFloat(hRaw) || 0.0;
-            const n = parseFloat(document.getElementById('tep-n').value) || 0.0; // 段数
+            const n = parseFloat(document.getElementById('tep-n').value) || 0.0;
             
             const area = document.getElementById('tep-res-area');
             if (h !== 0.0 && n !== 0.0) {
                 area.style.display = 'flex';
-                // 蹴上 ＝ 階高 ÷ 段数
                 document.getElementById('tep-keage').textContent = (h / n).toFixed(2) + " mm";
                 
-                // 各段の高さ（累計）のリストを作成
                 const list = document.getElementById('tep-list');
                 list.innerHTML = "";
                 for (let i = 1; i <= n; i++) {
@@ -767,13 +666,12 @@
             }
         }
         
-        // 鉄砲階段の踏面／水平長さの計算
         function calcTeppo() {
             document.activeElement.blur();
             const n = parseFloat(document.getElementById('tep-n').value) || 0.0;
-            const d = parseFloat(document.getElementById('tep-d').value) || 0.0; // 段鼻
-            const iF = document.getElementById('tep-f'); // 踏面
-            const iS = document.getElementById('tep-s'); // 水平長さ
+            const d = parseFloat(document.getElementById('tep-d').value) || 0.0;
+            const iF = document.getElementById('tep-f');
+            const iS = document.getElementById('tep-s');
             const err = document.getElementById('tep-err');
 
             if (iF.value !== "" && iS.value !== "") {
@@ -782,12 +680,10 @@
             }
             err.textContent = "";
             if (n > 0.0) {
-                // 踏面が空欄なら、水平長さを元に計算
                 if (iS.value !== "" && iF.value === "") {
                     const l = parseFloat(iS.value) || 0.0;
                     iF.value = ((l / (n - 1)) + d).toFixed(2);
                 } 
-                // 水平長さが空欄なら、踏面を元に計算
                 else if (iF.value !== "" && iS.value === "") {
                     const t = parseFloat(iF.value) || 0.0;
                     iS.value = ((t - d) * (n - 1)).toFixed(2);
@@ -795,27 +691,23 @@
             }
         }
 
-        // 回り段のエラー消去
         function clearMawErr() { document.getElementById('maw-err').textContent = ""; }
         
-        // 回り段のUI更新（角度表示と蹴上などのリアルタイム計算）
         function updateMawUI() {
             clearMawErr();
-            const hRaw = document.getElementById('maw-h').value; // 階高
-            const dRaw = document.getElementById('maw-d').value; // 段鼻
+            const hRaw = document.getElementById('maw-h').value;
+            const dRaw = document.getElementById('maw-d').value;
             document.getElementById('maw-btn').disabled = !(hRaw !== "" && dRaw !== "");
 
             const h = parseFloat(hRaw) || 0.0;
-            const n = parseFloat(document.getElementById('maw-n').value) || 0.0; // 全段数
-            const m = parseFloat(document.getElementById('maw-m').value) || 1.0; // 回り段の枚数
-            const a = parseFloat(document.getElementById('maw-a').value) || 0.0; // 全体角度
+            const n = parseFloat(document.getElementById('maw-n').value) || 0.0;
+            const m = parseFloat(document.getElementById('maw-m').value) || 1.0;
+            const a = parseFloat(document.getElementById('maw-a').value) || 0.0;
 
-            // 回り段1枚あたりの角度を計算
             const angVal = m !== 0.0 ? a / m : 0.0;
             if (angVal !== 0.0) {
                 document.getElementById('maw-angle-res').style.display = 'flex';
                 const rad = angVal * Math.PI / 180.0;
-                // 角度と勾配（10 × tanθ）を表示
                 document.getElementById('maw-angle-txt').textContent = `${angVal.toFixed(2)} ° \t ${(10.0 * Math.tan(rad)).toFixed(3)} 勾配`;
             } else {
                 document.getElementById('maw-angle-res').style.display = 'none';
@@ -823,7 +715,6 @@
 
             const keageRow = document.getElementById('maw-keage-row');
             const resArea = document.getElementById('maw-res-area');
-            // 蹴上と累計高さの生成（鉄砲階段と基本同じ）
             if (h !== 0.0 && n !== 0.0) {
                 keageRow.style.display = 'flex';
                 document.getElementById('maw-keage').textContent = (h / n).toFixed(2) + " mm";
@@ -843,12 +734,11 @@
             }
         }
         
-        // 回り段の鉄砲部分の寸法計算
         function calcMawari() {
             document.activeElement.blur();
-            const n = parseFloat(document.getElementById('maw-n').value) || 0.0; // 全段数
-            const m = parseFloat(document.getElementById('maw-m').value) || 0.0; // 回り段の枚数
-            const d = parseFloat(document.getElementById('maw-d').value) || 0.0; // 段鼻
+            const n = parseFloat(document.getElementById('maw-n').value) || 0.0;
+            const m = parseFloat(document.getElementById('maw-m').value) || 0.0;
+            const d = parseFloat(document.getElementById('maw-d').value) || 0.0;
             const iF = document.getElementById('maw-f');
             const iS = document.getElementById('maw-s');
             const err = document.getElementById('maw-err');
@@ -858,7 +748,7 @@
                 return;
             }
             err.textContent = "";
-            const tDansu = n - m; // 鉄砲部分の段数
+            const tDansu = n - m;
             if (tDansu > 0) {
                 if (iS.value !== "" && iF.value === "") {
                     const l = parseFloat(iS.value) || 0.0;
@@ -870,68 +760,127 @@
             }
         }
 
-        function clearKbErr() { document.getElementById('kb-err').textContent = ""; }
+        function clearKbErr() {
+            document.getElementById('kb-err').textContent = "";
+            document.getElementById('kb-visual').style.display = 'none';
+        }
         
-        // ピタゴラスの定理を用いた勾配・高さ・底辺・斜辺の相互計算
+        // ================= 勾配計算と図形描画ロジック (修正) =================
         function calcKoubai() {
             document.activeElement.blur();
-            const kStr = document.getElementById('kb-k').value; // 勾配
-            const lStr = document.getElementById('kb-l').value; // 底辺
-            const tStr = document.getElementById('kb-t').value; // 高さ
-            const sStr = document.getElementById('kb-s').value; // 斜辺
+            
+            const iK = document.getElementById('kb-k');
+            const iL = document.getElementById('kb-l');
+            const iT = document.getElementById('kb-t');
+            const iS = document.getElementById('kb-s');
+            
+            const kStr = iK.value;
+            const lStr = iL.value;
+            const tStr = iT.value;
+            const sStr = iS.value;
+            
             const err = document.getElementById('kb-err');
+            const visualCont = document.getElementById('kb-visual');
 
-            // 入力数の検証（最低2つ必要、4つ全埋まりは不可）
             const filledCount = [kStr, lStr, tStr, sStr].filter(v => v !== "").length;
-            if (filledCount < 2) { err.textContent = "少なくとも2つの項目を入力してください"; return; }
-            if (filledCount === 4) { err.textContent = "求めたい寸法を空欄にしてください"; return; }
+            if (filledCount < 2) {
+                err.textContent = "少なくとも2つの項目を入力してください";
+                visualCont.style.display = 'none';
+                return;
+            }
+            if (filledCount === 4) {
+                err.textContent = "求めたい寸法を空欄にしてください";
+                visualCont.style.display = 'none';
+                return;
+            }
             err.textContent = "";
 
-            const k = kStr !== "" ? parseFloat(kStr) : null;
-            const l = lStr !== "" ? parseFloat(lStr) : null;
-            const t = tStr !== "" ? parseFloat(tStr) : null;
-            const s = sStr !== "" ? parseFloat(sStr) : null;
+            let k = kStr !== "" ? parseFloat(kStr) : null;
+            let l = lStr !== "" ? parseFloat(lStr) : null;
+            let t = tStr !== "" ? parseFloat(tStr) : null;
+            let s = sStr !== "" ? parseFloat(sStr) : null;
 
-            // 入力されている組み合わせに応じて計算ルートを分岐
+            let calculated = false;
+
             if (l !== null && t !== null) {
-                // 底辺と高さから、斜辺と勾配を算出
-                if (sStr === "") document.getElementById('kb-s').value = Math.sqrt(Math.pow(l, 2) + Math.pow(t, 2)).toFixed(2);
-                if (kStr === "") document.getElementById('kb-k').value = ((t / l) * 10.0).toFixed(2);
+                s = Math.sqrt(Math.pow(l, 2) + Math.pow(t, 2));
+                k = (t / l) * 10.0;
+                calculated = true;
             } else if (k !== null && l !== null) {
-                // 勾配と底辺から、高さと斜辺を算出
-                const calcT = (k / 10.0) * l;
-                if (tStr === "") document.getElementById('kb-t').value = calcT.toFixed(2);
-                if (sStr === "") document.getElementById('kb-s').value = Math.sqrt(Math.pow(calcT, 2) + Math.pow(l, 2)).toFixed(2);
+                t = (k / 10.0) * l;
+                s = Math.sqrt(Math.pow(t, 2) + Math.pow(l, 2));
+                calculated = true;
             } else if (k !== null && t !== null && k !== 0.0) {
-                // 勾配と高さから、底辺と斜辺を算出
-                const calcL = (t * 10.0) / k;
-                if (lStr === "") document.getElementById('kb-l').value = calcL.toFixed(2);
-                if (sStr === "") document.getElementById('kb-s').value = Math.sqrt(Math.pow(t, 2) + Math.pow(calcL, 2)).toFixed(2);
+                l = (t * 10.0) / k;
+                s = Math.sqrt(Math.pow(t, 2) + Math.pow(l, 2));
+                calculated = true;
             } else if (k !== null && s !== null) {
-                // 勾配と斜辺から、底辺と高さを算出
                 const ratio = k / 10.0;
-                const calcL = Math.sqrt(Math.pow(s, 2) / (1 + Math.pow(ratio, 2)));
-                const calcT = ratio * calcL;
-                if (lStr === "") document.getElementById('kb-l').value = calcL.toFixed(2);
-                if (tStr === "") document.getElementById('kb-t').value = calcT.toFixed(2);
+                l = Math.sqrt(Math.pow(s, 2) / (1 + Math.pow(ratio, 2)));
+                t = ratio * l;
+                calculated = true;
             } else if (l !== null && s !== null && s > l) {
-                // 底辺と斜辺から、高さと勾配を算出
-                const calcT = Math.sqrt(Math.pow(s, 2) - Math.pow(l, 2));
-                if (tStr === "") document.getElementById('kb-t').value = calcT.toFixed(2);
-                if (kStr === "") document.getElementById('kb-k').value = ((calcT / l) * 10.0).toFixed(2);
+                t = Math.sqrt(Math.pow(s, 2) - Math.pow(l, 2));
+                k = (t / l) * 10.0;
+                calculated = true;
             } else if (t !== null && s !== null && s > t) {
-                // 高さと斜辺から、底辺と勾配を算出
-                const calcL = Math.sqrt(Math.pow(s, 2) - Math.pow(t, 2));
-                if (lStr === "") document.getElementById('kb-l').value = calcL.toFixed(2);
-                if (kStr === "") document.getElementById('kb-k').value = ((t / calcL) * 10.0).toFixed(2);
+                l = Math.sqrt(Math.pow(s, 2) - Math.pow(t, 2));
+                k = (t / l) * 10.0;
+                calculated = true;
+            }
+
+            if (calculated) {
+                // 入力欄に結果を戻す
+                iK.value = k.toFixed(2);
+                iL.value = l.toFixed(2);
+                iT.value = t.toFixed(2);
+                iS.value = s.toFixed(2);
+
+                // --- SVG図形描画 ---
+                visualCont.innerHTML = ""; 
+                visualCont.style.display = 'flex';
+
+                // 固定の三角形を描画 (比率 10:4)
+                const svgW = 300; 
+                const pad = 25; 
+                const drawW = svgW - pad * 2; // 250
+                const drawH = drawW * (4 / 10); // 100
+                const svgH = drawH + pad * 2; // 150
+
+                // 座標計算 (右下基準の直角三角形)
+                const Ax = pad;
+                const Ay = pad;
+                const Bx = pad;
+                const By = svgH - pad;
+                const Cx = pad + drawW;
+                const Cy = svgH - pad;
+
+                // 斜辺の角度 (描画テキストの回転用)
+                const drawDeg = Math.atan2(drawH, drawW) * 180 / Math.PI;
+
+                // SVGコード生成 (寸法数値のみ、小数点第2位まで)
+                const svgCode = `
+                    <svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" fill="#E8DEF8" stroke="#6750A4" stroke-width="3"/>
+                        
+                        <text x="${Bx + drawW/2}" y="${By + 18}" font-size="14" text-anchor="middle" fill="#1D1B20" font-weight="bold">${l.toFixed(2)}</text>
+                        
+                        <text x="${Bx - 8}" y="${By - drawH/2}" font-size="14" text-anchor="middle" transform="rotate(-90 ${Bx - 8} ${By - drawH/2})" fill="#1D1B20" font-weight="bold">${t.toFixed(2)}</text>
+                        
+                        <text x="${Ax + drawW/2}" y="${Ay + drawH/2 - 8}" font-size="14" text-anchor="middle" transform="rotate(${drawDeg} ${Ax + drawW/2} ${Ay + drawH/2 - 8})" fill="#6750A4" font-weight="bold">${s.toFixed(2)}</text>
+                    </svg>
+                `;
+                visualCont.innerHTML = svgCode;
+            } else {
+                err.textContent = "計算できませんでした。入力を確認してください。";
+                visualCont.style.display = 'none';
             }
         }
 
-        // 垂木掛けのラジオボタン切り替え時のUI表示制御
         function updateTarUI() {
             clearTarRes();
-            const b = document.querySelector('input[name="tar-base"]:checked').value; // 基準: 口脇 or 峠
-            const p = document.querySelector('input[name="tar-proc"]:checked').value; // 加工の種類
+            const b = document.querySelector('input[name="tar-base"]:checked').value;
+            const p = document.querySelector('input[name="tar-proc"]:checked').value;
             
             document.getElementById('tar-kuchi-grp').style.display = b === "口脇" ? 'flex' : 'none';
             document.getElementById('tar-touge-grp').style.display = b === "峠" ? 'flex' : 'none';
@@ -939,26 +888,22 @@
         }
         function clearTarRes() { document.getElementById('tar-res-area').style.display = 'none'; }
         
-        // 垂木掛けの高さ計算
         function calcTaruki() {
             document.activeElement.blur();
             const b = document.querySelector('input[name="tar-base"]:checked').value;
             const p = document.querySelector('input[name="tar-proc"]:checked').value;
             
-            // 各入力値の取得
-            const k = parseFloat(document.getElementById('tar-k').value) || 0.0; // 屋根勾配
-            const j = parseFloat(document.getElementById('tar-j').value) || 0.0; // 地の間（芯々の距離）
-            const ta = parseFloat(document.getElementById('tar-ta').value) || 0.0; // 垂木掛けの厚み
-            const ma = parseFloat(document.getElementById('tar-ma').value) || 0.0; // 面材の厚み
-            const d = parseFloat(document.getElementById('tar-d').value) || 0.0; // 桁の幅
-            const th = parseFloat(document.getElementById('tar-th').value) || 0.0; // 峠の高さ
-            const tn = parseFloat(document.getElementById('tar-tn').value) || 0.0; // 垂木の成
+            const k = parseFloat(document.getElementById('tar-k').value) || 0.0;
+            const j = parseFloat(document.getElementById('tar-j').value) || 0.0;
+            const ta = parseFloat(document.getElementById('tar-ta').value) || 0.0;
+            const ma = parseFloat(document.getElementById('tar-ma').value) || 0.0;
+            const d = parseFloat(document.getElementById('tar-d').value) || 0.0;
+            const th = parseFloat(document.getElementById('tar-th').value) || 0.0;
+            const tn = parseFloat(document.getElementById('tar-tn').value) || 0.0;
 
-            // 基準の処理（峠指定の場合は口脇の深さを逆算）
             const f = b === "口脇" ? (parseFloat(document.getElementById('tar-kf').value) || 0.0) : (d / 2.0) * (k * 0.1) - th;
             let h = 0.0;
 
-            // 加工方法ごとの高さ(h)の算出
             if (p === "加工なし(角)") h = (k * j * 0.1) - (f + (k * ta * 0.1) + (k * ma * 0.1));
             else if (p === "山勾配有") h = (k * j * 0.1) - (f + (k * ma * 0.1));
             else if (p === "垂木彫り有") h = (k * j * 0.1) - (f + (k * ma * 0.1)) + (tn * Math.sqrt(100.0 + k * k) * 0.1);
@@ -966,7 +911,6 @@
             document.getElementById('tar-res-area').style.display = 'flex';
             document.getElementById('tar-res').textContent = h.toFixed(2);
 
-            // 峠計算時は逆算した口脇の深さも補足表示する
             const fTxt = document.getElementById('tar-f-txt');
             if (b === "峠") {
                 fTxt.style.display = 'block';
@@ -976,7 +920,6 @@
             }
         }
 
-        // 内寸計算：全項目が埋まるまで計算ボタンを無効化する
         function checkUtiBtn() {
             const m = document.getElementById('uti-m').value;
             const h = document.getElementById('uti-h').value;
@@ -986,17 +929,15 @@
             document.getElementById('uti-btn').disabled = !(m && h && ma && oma && ir);
         }
         
-        // 各種部材間の内寸計算
         function execUtisun() {
-            const m = parseFloat(document.getElementById('uti-m').value) || 0.0; // モジュール（例: 910）
-            const h = parseFloat(document.getElementById('uti-h').value) || 0.0; // 柱
-            const ma = parseFloat(document.getElementById('uti-ma').value) || 0.0; // 間柱
-            const oma = parseFloat(document.getElementById('uti-oma').value) || 0.0; // 大間柱
-            const ir = parseFloat(document.getElementById('uti-ir').value) || 0.0; // 入隅
+            const m = parseFloat(document.getElementById('uti-m').value) || 0.0;
+            const h = parseFloat(document.getElementById('uti-h').value) || 0.0;
+            const ma = parseFloat(document.getElementById('uti-ma').value) || 0.0;
+            const oma = parseFloat(document.getElementById('uti-oma').value);
+            const ir = parseFloat(document.getElementById('uti-ir').value) || 0.0;
 
-            const interval = m / 2.0; // 柱〜間柱の芯々ピッチ（例: 455）
+            const interval = m / 2.0;
             
-            // 芯々寸法から各部材の厚みの半分（または全幅）を引いて有効内寸を出す
             const uColumnToStud = m > 0 ? interval - (h / 2.0) - (ma / 2.0) : 0.0;
             const uCornerToStud = m > 0 ? interval - (h / 2.0) - ir - (ma / 2.0) : 0.0;
             const uStudToLargeStud = m > 0 ? interval - (ma / 2.0) - (oma / 2.0) : 0.0;
@@ -1009,7 +950,6 @@
                 { l: "柱 〜 柱", v: uColumnToColumn }
             ];
 
-            // 別画面（utisun_result）のテーブルに結果を出力
             document.getElementById('uti-res-title').textContent = `計算結果 (ピッチ: ${interval.toFixed(1)}mm)`;
             const tBody = document.getElementById('uti-table-body');
             tBody.innerHTML = "";
@@ -1017,23 +957,20 @@
                 const row = document.createElement('div');
                 row.className = 'table-row table-data';
                 const mm = r.v.toFixed(1);
-                const sunText = (r.v / 30.30303).toFixed(2).replace(".", "'"); // 寸法表記（「'」は寸の代わり）
+                const sunText = (r.v / 30.30303).toFixed(2).replace(".", "'");
                 row.innerHTML = `<div class="col-label">${r.l}</div><div class="col-value">${mm}</div><div class="col-value">${sunText}</div>`;
                 tBody.appendChild(row);
             });
 
-            // 結果画面へ遷移
             navigateTo('utisun_result', '内寸計算結果');
         }
 
-        // 筋交の長さ計算（シンプルな三平方の定理）
         function calcSugikai() {
-            const u = parseFloat(document.getElementById('sugi-u').value) || 0.0; // 内寸
-            const t = parseFloat(document.getElementById('sugi-t').value) || 0.0; // 高さ
+            const u = parseFloat(document.getElementById('sugi-u').value) || 0.0;
+            const t = parseFloat(document.getElementById('sugi-t').value) || 0.0;
             document.getElementById('sugi-res').textContent = (u > 0 && t > 0) ? Math.sqrt(Math.pow(u, 2) + Math.pow(t, 2)).toFixed(1) : "0.0";
         }
 
-        // 勾配（寸）入力時に角度へ変換
         function updateAngleFromKoubai(input) {
             document.getElementById('kak-k').value = input;
             const k = parseFloat(input);
@@ -1041,7 +978,6 @@
             else if (input === "") document.getElementById('kak-a').value = "";
         }
         
-        // 角度入力時に勾配（寸）へ変換
         function updateKoubaiFromAngle(input) {
             document.getElementById('kak-a').value = input;
             const deg = parseFloat(input);
@@ -1049,12 +985,11 @@
             else if (input === "") document.getElementById('kak-k').value = "";
         }
 
-        // ================= Boot（初期化） =================
         window.onload = () => {
-            initMenu(); // メニューの描画
-            calcKiku(); // Page1用の初期計算を実行
-            updateTepUI(); // 階段用のUI初期化
-            updateMawUI(); // 回り段用のUI初期化
+            initMenu();
+            calcKiku();
+            updateTepUI();
+            updateMawUI();
         };
     </script>
 </body>
