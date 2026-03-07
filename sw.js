@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daiku-calc-v1.001.002';
+const CACHE_NAME = 'daiku-calc-v2.1.1';
 const urlsToCache = [
   '大工の計算機.html'
 ];
@@ -16,4 +16,5 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
 
