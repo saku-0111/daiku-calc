@@ -160,14 +160,6 @@
         </div>
 
         <div id="page2" class="page">
-            <h3 class="title-medium">計算方式を選択:</h3>
-            <div class="radio-row">
-                <input type="radio" id="ita-shin" name="ita-opt" value="板芯割" checked onchange="calcItawari()">
-                <label for="ita-shin">板芯割</label>
-                <div class="spacer-16"></div>
-                <input type="radio" id="ita-hashi" name="ita-opt" value="板端割" onchange="calcItawari()">
-                <label for="ita-hashi">板端割</label>
-            </div>
             <div class="input-group">
                 <label>全長</label>
                 <input type="number" id="ita-zentyou" step="any" oninput="calcItawari()">
@@ -176,14 +168,7 @@
                 <label>板巾</label>
                 <input type="number" id="ita-haba" step="any" oninput="calcItawari()">
             </div>
-            <hr class="divider" style="margin: 8px 0;">
-            <div class="result-row"><span class="result-label">必要枚数(真物)</span><span class="result-value" id="ita-maisu">0枚</span></div>
-            <div class="result-row"><span class="result-label">張始め・終わりの板巾</span><span class="result-value" id="ita-tanbu">0.00</span></div>
-            <div id="ita-marks-area" style="display: none; flex-direction: column;">
-                <hr class="divider" style="margin: 8px 0;">
-                <p class="title-medium" style="font-size:14px; margin-bottom: 4px;">通り出し寸法 (5枚おき):</p>
-                <div id="ita-marks-list"></div>
-            </div>
+            <div id="ita-results-area" style="display: flex; flex-direction: column; gap: 24px; margin-top: 8px;"></div>
         </div>
 
         <div id="page3" class="page">
@@ -501,55 +486,110 @@
         function calcItawari() {
             const zStr = document.getElementById('ita-zentyou').value;
             const iStr = document.getElementById('ita-haba').value;
-            const opt = document.querySelector('input[name="ita-opt"]:checked').value; // 板芯割 or 板端割
 
             const zValue = parseFloat(zStr); // 全長
             const iValue = parseFloat(iStr); // 板巾
+            
+            const resultsArea = document.getElementById('ita-results-area');
+            resultsArea.innerHTML = "";
 
-            let maisu = 0;   // 真物（カットしない板）の枚数
-            let tanbu = 0.0; // 端材（張り始め・終わり）の寸法
-            let marks = [];  // 通り出し（墨付け位置）の配列
+            if (isNaN(zValue) || isNaN(iValue) || iValue === 0.0) {
+                return;
+            }
 
-            if (!isNaN(zValue) && !isNaN(iValue) && iValue !== 0.0) {
-                const div = zValue / iValue;
-                if (opt === "板端割") {
-                    // 端から計算していく場合
-                    maisu = Math.floor(div);
-                    tanbu = (zValue - (maisu * iValue)) / 2.0;
-                } else {
-                    // 芯割り（中心から振り分ける）場合
-                    const ceilM = Math.ceil(div);
-                    tanbu = iValue - (((ceilM * iValue) - zValue) / 2.0);
-                    maisu = Math.max(0, ceilM - 2);
-                }
-                // 5枚おきの墨付け位置を計算
-                if (iValue > 0 && maisu >= 5) {
-                    for (let count = 5; count <= maisu; count += 5) {
-                        marks.push({ count: count, dist: tanbu + count * iValue });
-                    }
+            const div = zValue / iValue;
+
+            // --- 板端割の計算 ---
+            let maisuHashi = Math.floor(div);
+            let tanbuHashi = (zValue - (maisuHashi * iValue)) / 2.0;
+            let marksHashi = [];
+            if (iValue > 0 && maisuHashi >= 5) {
+                for (let count = 5; count <= maisuHashi; count += 5) {
+                    marksHashi.push({ count: count, dist: tanbuHashi + (count - 1) * iValue });
                 }
             }
 
-            // UIの更新
-            document.getElementById('ita-maisu').textContent = `${maisu}枚`;
-            document.getElementById('ita-tanbu').textContent = (!isNaN(zValue) && !isNaN(iValue) && iValue !== 0.0) ? tanbu.toFixed(2) : "0.00";
-
-            // 墨付け位置リストの表示
-            const marksArea = document.getElementById('ita-marks-area');
-            const marksList = document.getElementById('ita-marks-list');
-            marksList.innerHTML = "";
-            if (marks.length > 0) {
-                marksArea.style.display = 'flex';
-                marks.forEach(m => {
-                    const p = document.createElement('p');
-                    p.className = 'body-medium';
-                    p.style.padding = '2px 0';
-                    p.textContent = `${m.count}通り目: ${m.dist.toFixed(1)} `;
-                    marksList.appendChild(p);
-                });
-            } else {
-                marksArea.style.display = 'none';
+            // --- 板芯割の計算 ---
+            let ceilM = Math.ceil(div);
+            let tanbuShin = iValue - (((ceilM * iValue) - zValue) / 2.0);
+            let maisuShin = Math.max(0, ceilM - 2);
+            let marksShin = [];
+            if (iValue > 0 && maisuShin >= 5) {
+                for (let count = 5; count <= maisuShin; count += 5) {
+                    marksShin.push({ count: count, dist: tanbuShin + (count - 1) * iValue });
+                }
             }
+
+            // 結果を配列にまとめる
+            let results = [
+                { maisu: maisuHashi, tanbu: tanbuHashi, marks: marksHashi },
+                { maisu: maisuShin, tanbu: tanbuShin, marks: marksShin }
+            ];
+
+            // 張始め・終わりの板巾(tanbu)が大きい順にソート（大きい方を優先）
+            results.sort((a, b) => b.tanbu - a.tanbu);
+
+            // DOM生成
+            results.forEach((res, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+
+                // タイトル
+                const title = document.createElement('h3');
+                title.className = 'title-medium';
+                title.style.marginBottom = '4px';
+                // パターン1, 2として表示。大きい方を優先（おすすめ）として強調表示
+                title.innerHTML = `パターン${index + 1} <span style="font-size: 12px; color: #625B71; font-weight: normal;">${index === 0 ? '(推奨)' : ''}</span>`;
+                wrapper.appendChild(title);
+
+                const hr1 = document.createElement('hr');
+                hr1.className = 'divider';
+                hr1.style.margin = '4px 0 8px 0';
+                wrapper.appendChild(hr1);
+
+                // 枚数
+                const rowMaisu = document.createElement('div');
+                rowMaisu.className = 'result-row';
+                rowMaisu.innerHTML = `<span class="result-label">必要枚数(真物)</span><span class="result-value">${res.maisu}枚</span>`;
+                wrapper.appendChild(rowMaisu);
+
+                // 板巾
+                const rowTanbu = document.createElement('div');
+                rowTanbu.className = 'result-row';
+                rowTanbu.innerHTML = `<span class="result-label">張始め・終わりの板巾</span><span class="result-value ${index === 0 ? 'text-primary' : ''}">${res.tanbu.toFixed(2)}</span>`;
+                wrapper.appendChild(rowTanbu);
+
+                // 通り出し寸法
+                if (res.marks.length > 0) {
+                    const marksArea = document.createElement('div');
+                    marksArea.style.display = 'flex';
+                    marksArea.style.flexDirection = 'column';
+
+                    const hr2 = document.createElement('hr');
+                    hr2.className = 'divider';
+                    hr2.style.margin = '8px 0';
+                    marksArea.appendChild(hr2);
+
+                    const markTitle = document.createElement('p');
+                    markTitle.className = 'title-medium';
+                    markTitle.style.fontSize = '14px';
+                    markTitle.style.marginBottom = '4px';
+                    markTitle.textContent = '通り出し寸法 (5枚おき):';
+                    marksArea.appendChild(markTitle);
+
+                    res.marks.forEach(m => {
+                        const p = document.createElement('p');
+                        p.className = 'body-medium';
+                        p.style.padding = '2px 0';
+                        p.textContent = `${m.count}通り目: ${m.dist.toFixed(1)} `;
+                        marksArea.appendChild(p);
+                    });
+                    wrapper.appendChild(marksArea);
+                }
+
+                resultsArea.appendChild(wrapper);
+            });
         }
 
         // 割付計算のラジオボタン切替時のUI更新
