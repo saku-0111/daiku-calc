@@ -706,7 +706,11 @@
                 else if (iN.value === "") { if (w + s !== 0.0) iN.value = Math.ceil((l - (2.0 * ew + s)) / (w + s)).toString(); }
             }
 
-            document.getElementById('wari-process-btn').style.display = 'block';
+            if (hasMat && n <= 1.0 && (iW.value === "" || iS.value === "")) {
+                document.getElementById('wari-process-btn').style.display = 'none';
+            } else {
+                document.getElementById('wari-process-btn').style.display = 'block';
+            }
         }
 
         function buildStepOpts(id) {
@@ -766,7 +770,7 @@
                 return;
             }
             err.textContent = "";
-            if (n > 0.0) {
+            if (n > 1.0) {
                 if (iS.value !== "" && iF.value === "") {
                     const l = parseFloat(iS.value) || 0.0;
                     iF.value = ((l / (n - 1)) + d).toFixed(2);
@@ -840,7 +844,7 @@
             }
             err.textContent = "";
             const tDansu = n - m;
-            if (tDansu > 0) {
+            if (tDansu > 1.0) {
                 if (iS.value !== "" && iF.value === "") {
                     const l = parseFloat(iS.value) || 0.0;
                     iF.value = ((l / (tDansu - 1)) + d).toFixed(2);
@@ -1026,7 +1030,7 @@
             const m = parseFloat(document.getElementById('uti-m').value) || 0.0;
             const h = parseFloat(document.getElementById('uti-h').value) || 0.0;
             const ma = parseFloat(document.getElementById('uti-ma').value) || 0.0;
-            const oma = parseFloat(document.getElementById('uti-oma').value);
+            const oma = parseFloat(document.getElementById('uti-oma').value) || 0.0;
             const ir = parseFloat(document.getElementById('uti-ir').value) || 0.0;
 
             const interval = m / 2.0;
@@ -1237,7 +1241,7 @@
                     <b>3. 鉄砲部の計算</b><br>
                     <div class="formula-box">鉄砲部の段数 = 全段数 - 回り段枚数<br> = ${n} - ${m} = ${n-m} 段</div>`;
                 const tDansu = n - m;
-                if (tDansu > 0) {
+                if (tDansu > 1.0) {
                     if (parseFloat(iF).toFixed(2) === (((parseFloat(iS)/(tDansu-1))+d).toFixed(2))) {
                         p += `求めた項目: 鉄砲部の踏面寸法<br>
                             <div class="formula-box">踏面 = (水平長さ ÷ (鉄砲部段数 - 1)) + 段鼻寸法<br>
@@ -1248,7 +1252,7 @@
                             = (${iF} - ${d}) × (${tDansu} - 1)<br> = ${((parseFloat(iF)-d)*(tDansu-1)).toFixed(2)} mm</div>`;
                     }
                 } else {
-                    p += `鉄砲部が存在しません。`;
+                    p += `鉄砲部が存在しません（または計算できる段数ではありません）。`;
                 }
 
             } else if (pageId === 'page5') {
