@@ -1065,14 +1065,12 @@
         }
 
         function updateAngleFromKoubai(input) {
-            document.getElementById('kak-k').value = input;
             const k = parseFloat(input);
             if (!isNaN(k)) document.getElementById('kak-a').value = (Math.atan(k / 10.0) * 180.0 / Math.PI).toFixed(2);
             else if (input === "") document.getElementById('kak-a').value = "";
         }
         
         function updateKoubaiFromAngle(input) {
-            document.getElementById('kak-a').value = input;
             const deg = parseFloat(input);
             if (!isNaN(deg)) document.getElementById('kak-k').value = (10.0 * Math.tan(deg * Math.PI / 180.0)).toFixed(2);
             else if (input === "") document.getElementById('kak-k').value = "";
