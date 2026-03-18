@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大工の計算機</title>
+    
+    <title>大工の計算機 | 現場で即座に計算</title>
+
+    <meta name="description" content="現場で働く大工さんのためのWeb計算アプリ。規矩術（勾殳玄）、板割、割付、階段（鉄砲・回り段）、勾配変換、垂木掛けの高さなど、複雑な計算をスマートフォンで簡単に行えます。計算過程の確認機能付き。">
+
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="大工の計算機">
+    <meta property="og:description" content="規矩術や階段の割付など、現場で必要な計算を瞬時に解決するWebアプリ。">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="大工の計算機">
+
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
@@ -267,6 +278,7 @@
             <div class="input-group"><label>内寸</label><input type="number" id="wari-s" step="any" oninput="clearWariErr()"></div>
             <div class="input-group"><label id="wari-count-label">本数</label><input type="number" id="wari-n" step="any" oninput="clearWariErr()"></div>
             <div id="wari-err" class="error-text"></div>
+            <p class="body-small">※本数は切り上げ計算のため内寸に誤差が出ます</p>
             <button id="wari-btn" class="m3-button" onclick="calcWaritsuke()">計算する</button>
             <button id="wari-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('page3')">計算過程を表示</button>
         </div>
