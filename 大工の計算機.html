@@ -267,7 +267,6 @@
             <div class="input-group"><label>内寸</label><input type="number" id="wari-s" step="any" oninput="clearWariErr()"></div>
             <div class="input-group"><label id="wari-count-label">本数</label><input type="number" id="wari-n" step="any" oninput="clearWariErr()"></div>
             <div id="wari-err" class="error-text"></div>
-            <p class="body-small">※本数は切り上げ計算のため内寸に誤差が出ます</p>
             <button id="wari-btn" class="m3-button" onclick="calcWaritsuke()">計算する</button>
             <button id="wari-process-btn" class="m3-button process-button" style="display: none;" onclick="showProcessModal('page3')">計算過程を表示</button>
         </div>
@@ -698,15 +697,31 @@
                 if (iL.value === "" && iW.value !== "" && iS.value !== "" && iN.value !== "") iL.value = (w * (n - 1.0) + s * (n - 1.0)).toFixed(2);
                 else if (iW.value === "") { if (n > 1.0) iW.value = ((l - s * (n - 1.0)) / (n - 1.0)).toFixed(2); }
                 else if (iS.value === "") { if (n > 1.0) iS.value = ((l - w * (n - 1.0)) / (n - 1.0)).toFixed(2); }
-                else if (iN.value === "") { if (w + s !== 0.0) iN.value = Math.ceil(l / (w + s) + 1).toString(); }
+                else if (iN.value === "") { 
+                    if (w + s !== 0.0) {
+                        const calcN = Math.ceil(l / (w + s) + 1);
+                        iN.value = calcN.toString();
+                        // 本数を切り上げたので、それに合わせて内寸を再計算するわ
+                        if (calcN > 1.0) {
+                            iS.value = ((l - w * (calcN - 1.0)) / (calcN - 1.0)).toFixed(2);
+                        }
+                    } 
+                }
             } else {
                 if (iL.value === "" && iEW.value !== "" && iW.value !== "" && iS.value !== "" && iN.value !== "") iL.value = (2 * ew + n * w + (n + 1) * s).toFixed(2);
                 else if (iW.value === "") { if (n !== 0.0) iW.value = ((l - (2 * ew + (n + 1) * s)) / n).toFixed(2); }
                 else if (iS.value === "") { iS.value = ((l - (2 * ew + n * w)) / (n + 1)).toFixed(2); }
-                else if (iN.value === "") { if (w + s !== 0.0) iN.value = Math.ceil((l - (2.0 * ew + s)) / (w + s)).toString(); }
+                else if (iN.value === "") { 
+                    if (w + s !== 0.0) {
+                        const calcN = Math.ceil((l - (2.0 * ew + s)) / (w + s));
+                        iN.value = calcN.toString();
+                        // 外面の場合も、切り上げた本数を使って内寸を再計算するわね
+                        iS.value = ((l - (2.0 * ew + calcN * w)) / (calcN + 1.0)).toFixed(2);
+                    } 
+                }
             }
 
-            if (hasMat && n <= 1.0 && (iW.value === "" || iS.value === "")) {
+            if (hasMat && parseFloat(iN.value) <= 1.0 && (iW.value === "" || iS.value === "")) {
                 document.getElementById('wari-process-btn').style.display = 'none';
             } else {
                 document.getElementById('wari-process-btn').style.display = 'block';
